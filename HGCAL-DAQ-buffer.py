@@ -48,6 +48,8 @@ drainingRate               = args.fraction * averageFillingRate
 ################################
 # the main loop over the buckets
 bucketNumber               = 0
+l1aNumber                  = 0
+overflowNumber             = 0
 dataInBuffer               = 0.
 print('\n----- looping -----\n')
 while  bucketNumber < args.numEvents :
@@ -65,10 +67,10 @@ while  bucketNumber < args.numEvents :
 
     # do we have a trigger?
     if not utils.isThereL1A(probL1A):
-        if (args.verbosity) : print('\t\t TRIG NO  BX 00 -  dataInBuffer: %2.2f'%dataInBuffer )
+        if (args.verbosity) : print('\t\t TRIG NO  BX 00  -  dataInBuffer: %2.2f'%dataInBuffer )
         continue
     else:
-        if (args.verbosity) : print('\t\t TRIG YES  BX 00 -  dataInBuffer: %2.2f'%dataInBuffer )
+        if (args.verbosity) : print('\t\t TRIG YES  BX 00  -  dataInBuffer: %2.2f'%dataInBuffer )
 
 
     # do we have a bunch crossing?
@@ -77,8 +79,14 @@ while  bucketNumber < args.numEvents :
         if (args.verbosity) : print('\t\t TRIG YES  BX NO -  dataInBuffer: %2.2f'%dataInBuffer )
         continue
 
+    l1aNumber   += 1
     # add the data to the buffer (in units of average event size)
     dataInBuffer += 1.
+    if dataInBuffer > args.depthBuffer:
+        if (args.verbosity) : print('\t\t OVERFLOW         -  dataInBuffer: %2.2f'%dataInBuffer )
+        overflowNumber +=1
+        # if the next event does not fit, it does not enter the buffer
+        dataInBuffer   -= 1.
 
     if (args.verbosity) : print('\t\t TRIG YES  BX YES -  dataInBuffer: %2.2f'%dataInBuffer )
     # check if the buffer has overflown, in which case remove the last event
@@ -92,8 +100,14 @@ while  bucketNumber < args.numEvents :
 print('\n\n\n\n----- finish -----\nall arguments in input:')
 print('',parser.parse_args())
 print(' probL1A: %2.4f'%probL1A)
-print(' averageFillingRate: %2.4f [average event / bucket]'%averageFillingRate)
-print(' drainingRate: %2.4f [average event / bucket]'%drainingRate)
+print(' averageFillingRate: %2.4f [average event size / bucket]'%averageFillingRate)
+print(' drainingRate: %2.4f [average event size / bucket]'%drainingRate)
+print(' number of buckets: %d'%bucketNumber)
+print(' number of L1As: %d'%l1aNumber)
+print(' number of DAQ overflows: %d'%overflowNumber)
+print(' fraction of DAQ overflows: %2.4f'%(overflowNumber/bucketNumber))
+
+
 print('\n')
 
 
