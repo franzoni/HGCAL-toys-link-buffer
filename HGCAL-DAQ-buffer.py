@@ -12,7 +12,7 @@ parser = ArgumentParser(description="Emulate numEvents buckets, and count the nu
 # parser.add_argument("-v","--verbose", dest="verbose", type=int, help="activate verbosity",
 #                    action='store_false')
 parser.add_argument("-v", "--verbosity", dest="verbosity",
-                    type=bool, default=False,
+                    action='store_true',
                     help="activate verbosity")
 parser.add_argument("-n", "--numEvents", dest="numEvents",
                     type=int, default=10000,
@@ -29,53 +29,58 @@ parser.add_argument("-t", "--triggerRate", dest="triggerRate",
 args = parser.parse_args()
 
 
-print('\n\nall arguments in input:')
-print(parser.parse_args())
-print('\n')
 
-
-
-numCrossingsOverBuckets = 0.74 # compute this from the actual LHC orbit
-probL1A      = args.triggerRate / 40000000. / numCrossingsOverBuckets
+################################
+# prepare key variables
+lhcBucketRate              = 40000000
+numCrossingsOverNumBuckets = 0.74 # compute this from the actual LHC orbit schema
+probL1A                    = args.triggerRate / lhcBucketRate / numCrossingsOverNumBuckets
 if probL1A > 1. :
     print('probL1A is: ',probL1A)
-    raise ValueError('You cannot have L1 tirgger probability larger than 1! ')
-bucketNumber = 0
-dataInBuffer = 0.
+    raise ValueError('main: You cannot have L1 tirgger probability larger than 1! ')
 
 # the buffer gets filled of a size 1. (in units of average event) at every L1A (triggerRate)
-averageFillingRate = 1. * args.triggerRate / 40000000
-
-
+averageFillingRate         = 1. * args.triggerRate / lhcBucketRate
+drainingRate               = args.fraction * averageFillingRate
 
 
 
 ################################
 # the main loop over the buckets
+bucketNumber               = 0
+dataInBuffer               = 0.
+print('\n----- looping -----\n')
 while  bucketNumber < args.numEvents :
 
     # things to do for any bucket, irrespective of trials
     bucketNumber +=1
     if not bucketNumber % 100000:
-        print('at time: ', datetime.datetime.now(),' bucket bucketNumber: ',bucketNumber)
-
+        print('\n\n ++++ at time: ', datetime.datetime.now(),' bucket bucketNumber: ',bucketNumber,'+++ \n\n')
 
     # take away data from the buffer
-    dataInBuffer -= args.fraction * averageFillingRate
+    dataInBuffer -= drainingRate
     if (dataInBuffer < 0 ) : dataInBuffer=0
-    
+
+    if (args.verbosity) : print('\n\tbucketNumber: %d dataInBuffer: %2.2f'% (bucketNumber,dataInBuffer) )
 
     # do we have a trigger?
-    if not utils.isThereL1A(probL1A): continue
+    if not utils.isThereL1A(probL1A):
+        if (args.verbosity) : print('\t\t TRIG NO  BX 00 -  dataInBuffer: %2.2f'%dataInBuffer )
+        continue
+    else:
+        if (args.verbosity) : print('\t\t TRIG YES  BX 00 -  dataInBuffer: %2.2f'%dataInBuffer )
 
 
     # do we have a bunch crossing?
     # replace this selection with the real LHC structure
-    if not utils.isThereL1A(numCrossingsOverBuckets): continue
-    
+    if not utils.isThereL1A(numCrossingsOverNumBuckets): 
+        if (args.verbosity) : print('\t\t TRIG YES  BX NO -  dataInBuffer: %2.2f'%dataInBuffer )
+        continue
+
     # add the data to the buffer (in units of average event size)
     dataInBuffer += 1.
 
+    if (args.verbosity) : print('\t\t TRIG YES  BX YES -  dataInBuffer: %2.2f'%dataInBuffer )
     # check if the buffer has overflown, in which case remove the last event
 
 # end of the main loop
@@ -84,7 +89,14 @@ while  bucketNumber < args.numEvents :
 
 
 
-# print('\n\n\n\nHGCAL-DAQ-buffer')
+print('\n\n\n\n----- finish -----\nall arguments in input:')
+print('',parser.parse_args())
+print(' probL1A: %2.4f'%probL1A)
+print(' averageFillingRate: %2.4f [average event / bucket]'%averageFillingRate)
+print(' drainingRate: %2.4f [average event / bucket]'%drainingRate)
+print('\n')
+
+
 import sys
-print('\n\n\n\n\n',sys.argv[0])
+print('\n\n----- end -----\n',sys.argv[0])
 print(sys.version)
