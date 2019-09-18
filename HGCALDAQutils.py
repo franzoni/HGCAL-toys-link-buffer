@@ -1,6 +1,7 @@
 import random
 import json
 
+
 def isThereL1A(probability):
     if probability > 1:
         print("isThereL1A: probability set to", probability)
@@ -47,6 +48,10 @@ class lhcOrbitStructure:
 
         # if there's a bunch in each bucket, you have a collision (bunchCrossing==1), otherwise not ( ==0)
         self.bunchCrossing =   [one*two for one,two in zip(self.beamOne,self.beamTwo) ]
+
+
+    def numberBuckets(self):
+        return self.numverOfBuckets
 
     def numberBucketsWithBunchXing(self):
         return self.bunchCrossing.count(1)

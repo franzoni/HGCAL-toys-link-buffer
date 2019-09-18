@@ -5,6 +5,7 @@ import HGCALDAQutils as utils
 
 # https://docs.python.org/2/howto/argparse.html
 # https://docs.python.org/3/library/argparse.html#default
+# https://pymotw.com/2/argparse/#argument-types
 from   argparse import ArgumentParser
 parser = ArgumentParser(description="Emulate numEvents buckets, and count the number of HGCAL DAQ overflows")
 #parser.add_argument("-f", "--file", dest="filename",
@@ -15,7 +16,7 @@ parser.add_argument("-v", "--verbosity", dest="verbosity",
                     action='store_true',
                     help="activate verbosity")
 parser.add_argument("-n", "--numEvents", dest="numEvents",
-                    type=int, default=100001,
+                    type=int, default=100005,
                     help="number of LHC buckets simulated", metavar="N")
 parser.add_argument("-f", "--fraction", dest="fraction", 
                     type=float, default=1.3,
@@ -26,14 +27,37 @@ parser.add_argument("-d", "--depthBuffer", dest="depthBuffer",
 parser.add_argument("-t", "--triggerRate", dest="triggerRate",   
                     type=int, default=750000,
                     help="targer rate of L1 accepts [Hz]", metavar="T")
+# https://pymotw.com/2/argparse/#mutually-exclusive-options
+mutExclGroup = parser.add_mutually_exclusive_group()
+mutExclGroup.add_argument('-lhcReal','--lhcRealisticRun2', action='store_true'
+                          ,help="file containing beams bucket/bunch structure")
+mutExclGroup.add_argument('-lhcFlat','--lhcIrrealisticFlat', action='store_true'
+                          ,help="file containing beams bucket/bunch structure")
+mutExclGroup.add_argument('-lhcFile','--lhcStructureFromFile', dest='lhcFile'
+                          ,default='',help="file containing beams bucket/bunch structure")
+
 args = parser.parse_args()
 
 
 
 ################################
 # prepare key variables
+
+# set up the lhcOrbitStructure instance, first
+s=''
+if  args.lhcIrrealisticFlat:
+    pass
+elif args.lhcRealisticRun2:
+    s='data/25ns_2556b_2544_2215_2332_144bpi_20inj_800ns_bs200ns_v3-bunchArrays.json'
+elif args.lhcFile:
+    s=args.lhcFile
+else:
+    raise ValueError('main: none of the three LHC bunch structures options set. It'' needed ')    
+lhcOS                      = utils.lhcOrbitStructure(s)
+numCrossingsOverNumBuckets = lhcOS.numberBucketsWithBunchXing() / lhcOS.numberBuckets()
+
+# other consequent variables
 lhcBucketRate              = 40000000
-numCrossingsOverNumBuckets = 0.74 # compute this from the actual LHC orbit schema
 probL1A                    = args.triggerRate / lhcBucketRate / numCrossingsOverNumBuckets
 if probL1A > 1. :
     print('probL1A is: ',probL1A)
@@ -45,10 +69,11 @@ drainingRate               = args.fraction * averageFillingRate
 
 
 
+
 ################################
 # the main loop over the buckets
 bucketNumber               = -1
-l1aNumber                  = 0
+l1aCount                   = 0
 overflowNumber             = 0
 dataInBuffer               = 0.
 print('\n----- looping -----\n')
@@ -63,7 +88,6 @@ while  bucketNumber < args.numEvents :
     # take away data from the buffer
     dataInBuffer -= drainingRate
     if (dataInBuffer < 0 ) : dataInBuffer=0
-
     if (args.verbosity) : print('\n\tbucketNumber: %d dataInBuffer: %2.2f'% (bucketNumber,dataInBuffer) )
 
     # do we have a trigger?
@@ -76,11 +100,12 @@ while  bucketNumber < args.numEvents :
 
     # do we have a bunch crossing?
     # replace this selection with the real LHC structure
-    if not utils.isThereL1A(numCrossingsOverNumBuckets): 
+    # if not utils.isThereL1A(numCrossingsOverNumBuckets): # superseeded
+    if not lhcOS.isThereBunchCrossing(bucketNumber):
         if (args.verbosity) : print('\t\t TRIG YES  BX NO -  dataInBuffer: %2.2f'%dataInBuffer )
         continue
 
-    l1aNumber   += 1
+    l1aCount   += 1
     # add the data to the buffer (in units of average event size)
     dataInBuffer += 1.
     if dataInBuffer > args.depthBuffer:
@@ -103,8 +128,8 @@ print('',parser.parse_args())
 print(' probL1A: %2.4f'%probL1A)
 print(' averageFillingRate: %2.4f [average event size / bucket]'%averageFillingRate)
 print(' drainingRate: %2.4f [average event size / bucket]'%drainingRate)
-print(' number of buckets: %d'%bucketNumber)
-print(' number of L1As: %d'%l1aNumber)
+print(' number of buckets emulated: %d'%bucketNumber)
+print(' number of L1As: %d'%l1aCount)
 print(' number of DAQ overflows: %d'%overflowNumber)
 print(' fraction of DAQ overflows: %2.4f'%(overflowNumber/bucketNumber))
 
