@@ -15,7 +15,7 @@ parser.add_argument("-v", "--verbosity", dest="verbosity",
                     action='store_true',
                     help="activate verbosity")
 parser.add_argument("-n", "--numEvents", dest="numEvents",
-                    type=int, default=10000,
+                    type=int, default=100001,
                     help="number of LHC buckets simulated", metavar="N")
 parser.add_argument("-f", "--fraction", dest="fraction", 
                     type=float, default=1.3,
@@ -47,7 +47,7 @@ drainingRate               = args.fraction * averageFillingRate
 
 ################################
 # the main loop over the buckets
-bucketNumber               = 0
+bucketNumber               = -1
 l1aNumber                  = 0
 overflowNumber             = 0
 dataInBuffer               = 0.
@@ -57,7 +57,8 @@ while  bucketNumber < args.numEvents :
     # things to do for any bucket, irrespective of trials
     bucketNumber +=1
     if not bucketNumber % 100000:
-        print('\n\n ++++ at time: ', datetime.datetime.now(),' bucket bucketNumber: ',bucketNumber,'+++ \n\n')
+        print('\n\n ++++ at time: %s  bucket bucketNumber: %d +++ \n'\
+              %(datetime.datetime.now(),bucketNumber))
 
     # take away data from the buffer
     dataInBuffer -= drainingRate
