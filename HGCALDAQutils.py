@@ -2,6 +2,8 @@ import random
 import json
 
 
+#########################################################
+# a random flat trowing tool
 def isThereL1A(probability):
     if probability > 1:
         print("isThereL1A: probability set to", probability)
@@ -10,6 +12,11 @@ def isThereL1A(probability):
 
 
 
+
+#########################################################
+# class to handle the LHC bunch structure:
+#                                           load beam1/2 filled bunches
+#                                           return presence/absence of a bunch corssing, as a function of bucket-in-orbit-ID
 class lhcOrbitStructure:
 
     beamOne                = []
@@ -54,10 +61,6 @@ class lhcOrbitStructure:
         return self.numverOfBuckets
 
     def numberBucketsWithBunchXing(self):
-        #print('xxx')
-        #print(self.bunchCrossing)
-        #print(self.bunchCrossing.count(1))
-        #print('xxx -- end ')
         return self.bunchCrossing.count(1)
 
     def isThereBunchCrossing(self,bucketNumber=0):
