@@ -88,36 +88,37 @@ while  bucketNumber < args.numEvents :
         print('\n\n ++++ at time: %s  bucket bucketNumber: %d +++ \n'\
               %(datetime.datetime.now(),bucketNumber))
 
+    verb = args.verbosity and (dataInBuffer / args.depthBuffer > 0.95)
     # take away data from the buffer
     dataInBuffer -= drainingRate
     if (dataInBuffer < 0 ) : dataInBuffer=0
-    if (args.verbosity) : print('\n\tbucketNumber: %d dataInBuffer: %2.2f'% (bucketNumber,dataInBuffer) )
+    if (verb) : print('\n\tbucketNumber: %d dataInBuffer: %2.2f'% (bucketNumber,dataInBuffer) )
 
     # do we have a trigger?
     if not utils.isThereL1A(probL1A):
-        if (args.verbosity) : print('\t\t TRIG NO  BX 00  -  dataInBuffer: %2.2f'%dataInBuffer )
+        if (verb) : print('\t\t TRIG NO  BX 00  -  dataInBuffer: %2.2f'%dataInBuffer )
         continue
     else:
-        if (args.verbosity) : print('\t\t TRIG YES  BX 00  -  dataInBuffer: %2.2f'%dataInBuffer )
+        if (verb) : print('\t\t TRIG YES  BX 00  -  dataInBuffer: %2.2f'%dataInBuffer )
 
 
     # do we have a bunch crossing?
     # replace this selection with the real LHC structure
     # if not utils.isThereL1A(numCrossingsOverNumBuckets): # superseeded
     if not lhcOS.isThereBunchCrossing(bucketNumber):
-        if (args.verbosity) : print('\t\t TRIG YES  BX NO -  dataInBuffer: %2.2f'%dataInBuffer )
+        if (verb) : print('\t\t TRIG YES  BX NO -  dataInBuffer: %2.2f'%dataInBuffer )
         continue
 
     l1aCount   += 1
     # add the data to the buffer (in units of average event size)
     dataInBuffer += 1.
     if dataInBuffer > args.depthBuffer:
-        if (args.verbosity) : print('\t\t OVERFLOW         -  dataInBuffer: %2.2f'%dataInBuffer )
+        if (verb) : print('\t\t OVERFLOW         -  dataInBuffer: %2.2f'%dataInBuffer )
         overflowNumber +=1
         # if the next event does not fit, it does not enter the buffer
         dataInBuffer   -= 1.
 
-    if (args.verbosity) : print('\t\t TRIG YES  BX YES -  dataInBuffer: %2.2f'%dataInBuffer )
+    if (verb) : print('\t\t TRIG YES  BX YES -  dataInBuffer: %2.2f'%dataInBuffer )
     # check if the buffer has overflown, in which case remove the last event
 
 # end of the main loop
