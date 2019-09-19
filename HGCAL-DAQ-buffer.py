@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import datetime
+from   decimal import Decimal
 import HGCALDAQutils as utils
 
 # https://docs.python.org/2/howto/argparse.html
@@ -130,9 +131,9 @@ print('',parser.parse_args())
 print(' probL1A: %2.4f'%probL1A)
 print(' averageFillingRate: %2.4f [average event size / bucket]'%averageFillingRate)
 print(' drainingRate: %2.4f [average event size / bucket]'%drainingRate)
-print(' number of buckets emulated: %d'%bucketNumber)
-print(' number of L1As: %d'%l1aCount)
-print(' number of DAQ overflows: %d'%overflowNumber)
+print(' number of buckets emulated: %d   (%.2E)'%(bucketNumber, Decimal( bucketNumber ) ))
+print(' number of L1As: %d   (%.2E)'%(l1aCount, Decimal( l1aCount )))
+print(' number of DAQ overflows: %d   (%.2E)'%(overflowNumber, Decimal( overflowNumber ) ))
 print(' fraction of DAQ overflows: %2.4f'%(overflowNumber/bucketNumber))
 
 
