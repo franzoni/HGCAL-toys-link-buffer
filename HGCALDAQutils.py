@@ -54,6 +54,10 @@ class lhcOrbitStructure:
         return self.numverOfBuckets
 
     def numberBucketsWithBunchXing(self):
+        #print('xxx')
+        #print(self.bunchCrossing)
+        #print(self.bunchCrossing.count(1))
+        #print('xxx -- end ')
         return self.bunchCrossing.count(1)
 
     def isThereBunchCrossing(self,bucketNumber=0):

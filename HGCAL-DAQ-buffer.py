@@ -54,10 +54,12 @@ elif args.lhcFile:
 else:
     raise ValueError('main: none of the three LHC bunch structures options set. It'' needed ')    
 lhcOS                      = utils.lhcOrbitStructure(s)
-numCrossingsOverNumBuckets = lhcOS.numberBucketsWithBunchXing() / lhcOS.numberBuckets()
 
+
+numCrossingsOverNumBuckets = float( lhcOS.numberBucketsWithBunchXing() ) / lhcOS.numberBuckets()
 # other consequent variables
 lhcBucketRate              = 40000000
+
 probL1A                    = args.triggerRate / lhcBucketRate / numCrossingsOverNumBuckets
 if probL1A > 1. :
     print('probL1A is: ',probL1A)
