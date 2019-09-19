@@ -134,7 +134,7 @@ print(' drainingRate: %2.4f [average event size / bucket]'%drainingRate)
 print(' number of buckets emulated: %d   (%.2E)'%(bucketNumber, Decimal( bucketNumber ) ))
 print(' number of L1As: %d   (%.2E)'%(l1aCount, Decimal( l1aCount )))
 print(' number of DAQ overflows: %d   (%.2E)'%(overflowNumber, Decimal( overflowNumber ) ))
-print(' fraction of DAQ overflows: %2.4f'%(overflowNumber/bucketNumber))
+print(' fraction of DAQ overflows: %2.5f'%(overflowNumber/bucketNumber))
 
 
 print('\n')
