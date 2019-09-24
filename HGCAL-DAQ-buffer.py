@@ -29,16 +29,21 @@ parser.add_argument("-t", "--triggerRate", dest="triggerRate",
                     type=int, default=750000,
                     help="targer rate of L1 accepts [Hz]", metavar="T")
 # https://pymotw.com/2/argparse/#mutually-exclusive-options
-mutExclGroup = parser.add_mutually_exclusive_group()
-mutExclGroup.add_argument('-lhcReal','--lhcRealisticRun2', action='store_true'
+mutExclGroupLHC = parser.add_mutually_exclusive_group()
+mutExclGroupLHC.add_argument('-lhcFlat','--lhcIrrealisticFlat', action='store_true'
                           ,help="file containing beams bucket/bunch structure")
-mutExclGroup.add_argument('-lhcFlat','--lhcIrrealisticFlat', action='store_true'
+mutExclGroupLHC.add_argument('-lhcReal','--lhcRealisticRun2', action='store_true'
                           ,help="file containing beams bucket/bunch structure")
-mutExclGroup.add_argument('-lhcFile','--lhcStructureFromFile', dest='lhcFile'
+mutExclGroupLHC.add_argument('-lhcFile','--lhcStructureFromFile', dest='lhcFile'
                           ,default='',help="file containing beams bucket/bunch structure")
 
-args = parser.parse_args()
+mutExclGroupEvSiz = parser.add_mutually_exclusive_group()
+mutExclGroupEvSiz.add_argument('-fes','--fixEvSize', action='store_true'
+                          ,help="Events are all assumed having the same size")
+mutExclGroupEvSiz.add_argument('-varEvPU','--varEvePileUp', dest="nPu",type=int,default=-1
+                          ,help="ev-by-ev variable event size, choose PU scenario between 0 and 200")
 
+args = parser.parse_args()
 
 
 ################################
@@ -53,8 +58,29 @@ elif args.lhcRealisticRun2:
 elif args.lhcFile:
     s=args.lhcFile
 else:
-    raise ValueError('main: none of the three LHC bunch structures options set. It'' needed ')    
+    raise ValueError('main: none of the three LHC bunch structures options set. It''s needed')
 lhcOS                      = utils.lhcOrbitStructure(s)
+
+
+# set up the event-size variables then
+nPuFile=''
+if  args.fixEvSize:
+    #print('fixEvSize -> will leave the nPuFile empty')
+    pass
+elif args.nPu != -1:
+    if   args.nPu==0:
+        nPuFile='/eos/user/p/psilva/HGCal/DataRates/counts_FixedGridWtoQQ_PU0.pck'
+    elif args.nPu==200:
+        nPuFile='/eos/user/p/psilva/HGCal/DataRates/counts_FixedGridWtoQQ_PU200.pck'
+    else:
+        raise ValueError('main: none of the valid pile up valies set.')
+    #print('args.nPu is set')
+    #print(args.nPu)
+    #print(nPuFile)
+else:
+    raise ValueError('main: none of the two event-size options set. It''s needed')
+
+hexaSO = utils.hexaSensorOccupancy(nPuFile)
 
 
 numCrossingsOverNumBuckets = float( lhcOS.numberBucketsWithBunchXing() ) / lhcOS.numberBuckets()
@@ -111,7 +137,9 @@ while  bucketNumber < args.numEvents :
 
     l1aCount   += 1
     # add the data to the buffer (in units of average event size)
-    dataInBuffer += 1.
+    # dataInBuffer += 1.
+    # print(hexaSO.relativeOccupancy())
+    dataInBuffer += hexaSO.relativeOccupancy()
     if dataInBuffer > args.depthBuffer:
         if (verb) : print('\t\t OVERFLOW         -  dataInBuffer: %2.2f'%dataInBuffer )
         overflowNumber +=1

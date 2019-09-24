@@ -86,6 +86,8 @@ def histoAverage(theHisto=[1]):
     return average
 
 
+
+
 #########################################################
 # class to handle the occupancy of hexaboards (studied by CMSSW)
 # 
@@ -101,17 +103,17 @@ class hexaSensorOccupancy:
     histoMean  = 0.
 
     def __init__(self,theFile=''):
-        # open the pickele
+        print('creating hexaSensorOccupancy')
+        print('the pileup file is: %s'%theFile)
+        # open the pickle
         # (possibly handling the pyt2 case as well - for now do pyt3)
         # load the hitogram and store it somewhere
         # compute the average of the historgam
+        # unless no file is specified, in which case a trivial histogram is created
         if theFile=='':
             # if no file is pecified, trivialise the historgram -> occupancy always the same value
             self.histo = [0,1]
-            #self.histo = [0,0,0,0,0,0,1/3.,1/3.,1/3.,0,0,0,0,0,]
         else :
-            # move this to the class constructor
-            theFile = '/afs/cern.ch/user/f/franzoni/work/HGCAL-DAQ-buffer/counts_FixedGridWtoQQ_PU0.pck'
             # Convert Python 2 "ObjectType" to Python 3 object
             dill._dill._reverse_typemap["ObjectType"] = object
     
@@ -123,15 +125,9 @@ class hexaSensorOccupancy:
                 #waferKey=(0,8,-3,0) # good for a test high occup
                 #waferKey=(0,8,-6,0) # good for a test half of abobe
                 self.histo=loaded[waferKey]
-                # print(type(self.histo))
 
         self.histoSize = len(  self.histo )
         self.histoMean = histoAverage( self.histo  )
-        print(self.histo)
-        print(self.histoSize)
-        print(self.histoMean)
         
     def relativeOccupancy(self):
         return np.random.choice(self.histoSize, 1, p=self.histo )[0] / self.histoMean
-        # return random.random()
-        # replace here w/ the actual thrown histogram
