@@ -114,7 +114,7 @@ while  bucketNumber < args.numEvents :
         print('\n\n ++++ at time: %s  bucket bucketNumber: %d +++ \n'\
               %(datetime.datetime.now(),bucketNumber))
 
-    verb = args.verbosity or (dataInBuffer / args.depthBuffer > 0.95)
+    verb = args.verbosity
     # take away data from the buffer
     dataInBuffer -= drainingRate
     if (dataInBuffer < 0 ) : dataInBuffer=0
